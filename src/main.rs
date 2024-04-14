@@ -20,6 +20,21 @@ struct Args {
     end_string: String,
 }
 
+fn args_checker(args: &Args) -> (String, String) {
+    let start_string = args.start_string.clone();
+    let end_string: String = args.end_string.clone();
+
+    if u64::from_str_radix(&start_string, 16).is_err() && !start_string.is_empty() {
+       panic!("Invalid Starting String")
+    };
+
+    if u64::from_str_radix(&end_string, 16).is_err() && !end_string.is_empty() {
+        panic!("Invalid Ending String");
+    };
+
+    return (start_string, end_string);
+}
+
 fn generate_key_pair(secp: &Secp256k1<All>, rng: &mut OsRng) -> (SecretKey, PublicKey, String) {
     let mut private_key_bytes = [0_u8; 32];
     rng.fill(&mut private_key_bytes);
@@ -71,8 +86,7 @@ fn worker_thread(found: Arc<AtomicBool>, attempts: Arc<Mutex<u64>>, starting_str
 
 fn main() {
     let args = Args::from_args();
-    let starting_string= args.start_string;
-    let end_string = args.end_string;
+    let (start_string, end_string) = args_checker(&args);
     let found = Arc::new(AtomicBool::new(false));
     let attempts = Arc::new(Mutex::new(0));
     let num_threads = args.num_threads;
@@ -82,7 +96,7 @@ fn main() {
     for _ in 0..num_threads {
         let found_clone = found.clone();
         let attempts_clone = attempts.clone();
-        let starting_string_clone = starting_string.clone();
+        let starting_string_clone = start_string.clone();
         let ending_string_clone = end_string.clone();
         let handle = thread::spawn(move || {
             worker_thread(found_clone, attempts_clone, &starting_string_clone, &ending_string_clone);
