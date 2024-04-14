@@ -1,7 +1,7 @@
 use rand::Rng;
 use secp256k1::{All, PublicKey, Secp256k1, SecretKey};
 use sha3::{Digest, Keccak256};
-use rand::{rngs::OsRng, RngCore};
+use rand::rngs::OsRng;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -47,7 +47,7 @@ fn worker_thread(found: Arc<AtomicBool>, attempts: Arc<Mutex<u64>>, starting_str
 
     while !found.load(Ordering::Relaxed) {
         local_attempts += 1;
-        let (secret_key, public_key, private_key) = generate_key_pair(&secp, &mut rng);
+        let (_, public_key, private_key) = generate_key_pair(&secp, &mut rng);
         let address = calculate_address(&public_key);
         let public_key_serialized = &public_key.serialize_uncompressed();
         let public_key_bytes = &public_key_serialized[1..];
