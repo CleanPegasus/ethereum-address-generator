@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "ethereum-address-generator", about = "Generate Ethereum addresses")]
+#[structopt(name = "ethereum-address-generator", about = "Generate Vanity Ethereum addresses")]
 struct Args {
     #[structopt(short = "s", long = "start_string", default_value = "0000")]
     start_string: String,
