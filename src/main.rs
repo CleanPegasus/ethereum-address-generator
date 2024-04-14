@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 fn main() {
     let found = Arc::new(AtomicBool::new(false));
     let attempts = Arc::new(Mutex::new(0));
-    let num_threads = 10;
+    let num_threads = 12;
 
     let mut handles = vec![];
 
@@ -32,13 +32,13 @@ fn main() {
                 let hash = hasher.finalize();
                 let address_bytes = &hash[12..32];
                 let address = hex::encode(address_bytes);
-
-                if address.starts_with("000") && address.ends_with("69420") {
+                // update global counter
+                {
+                    let mut attempts_lock = attempts_clone.lock().unwrap();
+                    *attempts_lock += local_attempts;
+                }
+                if address.starts_with("00") {
                     found_clone.store(true, Ordering::Relaxed);
-                    {
-                        let mut attempts_lock = attempts_clone.lock().unwrap();
-                        *attempts_lock += local_attempts;  // Add local counter to global counter
-                    }
                     println!("Found matching Ethereum address: 0x{}", address);
                     println!("Private Key: {}", hex::encode(&private_key_bytes));
                     println!("Public Key: {}", hex::encode(public_key_bytes));
