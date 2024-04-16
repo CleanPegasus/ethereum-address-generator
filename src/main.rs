@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::sync::atomic::{AtomicBool, Ordering};
 use structopt::StructOpt;
+use std::fs::File;
+use std::io::prelude::*;
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "ethereum-address-generator", about = "Generate Vanity Ethereum addresses")]
@@ -80,8 +82,18 @@ fn worker_thread(found: Arc<AtomicBool>, attempts: Arc<Mutex<u64>>, starting_str
         if address.starts_with(starting_string) && address.ends_with(end_string) {
             found.store(true, Ordering::Relaxed);
             println!("Found matching Ethereum address: 0x{}", address);
-            println!("Private Key: {}", private_key);
-            println!("Public Key: {}", hex::encode(public_key_bytes));
+            let data = format!(
+                "Address   : 0x{address}\n\
+                 PrivateKey: {private_key}\n\
+                 PublicKey : {public_key}",
+                address = address,
+                private_key = private_key,
+                public_key = hex::encode(public_key_bytes)
+            );
+            let file_path = "vanity_address.txt";
+            let mut file = File::create(file_path).expect("Unable to create file");
+            file.write_all(data.as_bytes()).expect("Unable to write data");
+            println!("Private Key stored at {}", file_path);
             break;
         }
     }
