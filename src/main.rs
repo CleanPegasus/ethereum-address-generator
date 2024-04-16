@@ -24,15 +24,21 @@ fn args_checker(args: &Args) -> (String, String) {
     let start_string = args.start_string.clone();
     let end_string: String = args.end_string.clone();
 
+    // Check if start_string and end_string are hex values
     if u64::from_str_radix(&start_string, 16).is_err() && !start_string.is_empty() {
        panic!("Invalid Starting String")
     };
-
     if u64::from_str_radix(&end_string, 16).is_err() && !end_string.is_empty() {
         panic!("Invalid Ending String");
     };
 
     return (start_string, end_string);
+}
+
+fn calculate_fifty_percent_probability(start_string: &String, end_string: &String) {
+    let total_length = start_string.len() + end_string.len();
+    let total_permutations = total_length.pow(16); // 16 hex values for each byte
+    println!("It will take {} attempts to get a 50% chance of getting the desired address", total_permutations/2);
 }
 
 fn generate_key_pair(secp: &Secp256k1<All>, rng: &mut OsRng) -> (SecretKey, PublicKey, String) {
@@ -51,7 +57,7 @@ fn calculate_address(public_key: &PublicKey) -> String {
     let mut hasher = Keccak256::new();
     hasher.update(public_key_bytes);
     let hash = hasher.finalize();
-    let address_bytes = &hash[&hash.len() - 20..];
+    let address_bytes = &hash[&hash.len() - 20..]; // last 20 bytes of the hash of public key
     hex::encode(address_bytes)
 }
 
@@ -76,22 +82,21 @@ fn worker_thread(found: Arc<AtomicBool>, attempts: Arc<Mutex<u64>>, starting_str
             println!("Found matching Ethereum address: 0x{}", address);
             println!("Private Key: {}", private_key);
             println!("Public Key: {}", hex::encode(public_key_bytes));
-            println!("Local Attempts: {}", local_attempts);
             break;
         }
-
     }
-
 }
 
 fn main() {
     let args = Args::from_args();
     let (start_string, end_string) = args_checker(&args);
+    calculate_fifty_percent_probability(&start_string, &end_string);
     let found = Arc::new(AtomicBool::new(false));
     let attempts = Arc::new(Mutex::new(0));
     let num_threads = args.num_threads;
 
     let mut handles = vec![];
+    println!("Starting to calculate address........");
 
     for _ in 0..num_threads {
         let found_clone = found.clone();
